@@ -1,19 +1,13 @@
 const express = require('express')
 const router = express.Router()
+const {authMiddleware} = require('../middleware/admin/auth.middleware')
+const UserController = require('../controller/users')
 
-router.get('/',(req,res) => {
-	console.log(123)
-	res.json({
-		status: 200,
-		message: 'success',
-		data : {
-			code: 1,
-			message: '请求成功',
-			data: {
-				name: 'hello'
-			}
-		}
-	})
-})
+router.get('/', authMiddleware, UserController.getUser)
+router.post('/', UserController.creacteUser)
+router.post('/login', UserController.login)
+router.patch('/up', authMiddleware, UserController.updateUser) // 局部更新
+
+
 
 module.exports = router

@@ -4,6 +4,8 @@ const initServer = require('./src/init/initServer')
 const initRoute = require('./src/init/initRoute')
 const cors = require('cors')
 const morgan = require('morgan')
+const noMatchMiddleware = require('./src/middleware/404.middleware')
+const errorMiddleware = require('./src/middleware/error.middleware')
 
 const express = require('express')
 const app = express()
@@ -13,6 +15,10 @@ app.use(express.json()) // 解析json 数据
 app.use(morgan('tiny')) // http 日志
 // 路由
 initRoute(app)
+// 404
+app.use(noMatchMiddleware)
+// 统一错误处理
+app.use(errorMiddleware)
 
 const main = async () => {
 	// 初始化数据库服务
