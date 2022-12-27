@@ -34,8 +34,8 @@ const initRelation = () => {
 	})
 	// 用户和用户之间
 	User.belongsToMany(User, {
-		through: 'Followers',
-		as: 'followers',
+		through: 'Followers', // 自动创建的模型
+		as: 'followers', // 目标模型的别名
 		timestamps: false
 	})
 	// 文章和标签关系
