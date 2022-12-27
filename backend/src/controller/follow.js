@@ -1,10 +1,5 @@
-const {validateCreateUser, validateUserLogin} = require('../utils/validate/user.validate');
 const HttpException = require('../exceptions/http.exception')
 const User = require('../models/user')
-const {md5Password, matchPassword} = require('../utils/md5')
-const {sign} = require('../utils/jwt')
-const {request} = require('express');
-
 
 // 添加关注
 module.exports.follow = async (req, res, next) => {
