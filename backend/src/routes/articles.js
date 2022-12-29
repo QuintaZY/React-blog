@@ -5,10 +5,11 @@ const {authMiddleware} = require('../middleware/admin/auth.middleware')
 const ArticlesController = require('../controller/articles')
 // 文章
 router.post('/', authMiddleware , ArticlesController.createArticle)
-router.get('/:slug', authMiddleware , ArticlesController.getArticle)
+// 条件查看
 router.get('/', authMiddleware , ArticlesController.getArticles)
 router.get('/follow', authMiddleware , ArticlesController.getFollowArticle)
-router.put('/', authMiddleware , ArticlesController.updateArticles)
-router.delete('/', authMiddleware , ArticlesController.deleteArticles)
+router.get('/:slug', authMiddleware , ArticlesController.getArticle)
+router.put('/:slug', authMiddleware , ArticlesController.updateArticles)
+router.delete('/:slug', authMiddleware , ArticlesController.deleteArticles)
 
 module.exports = router
