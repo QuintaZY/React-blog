@@ -46,26 +46,25 @@ module.exports.addFavorite = async (req, res, next) => {
 // 取消关注
 module.exports.cancelFavorite = async (req, res, next) => {
 	try {
-		try {
-			const {slug} = req.params
-			let article = await Article.findByPk(slug, {include: Tag})
-			if (!article) {
-				throw new HttpException(404, '喜欢的文章不存在', 'not found')
-			}
-			// 移除喜欢
-			await article.removeUsers(req.user.email)
-			// 获取文章作者
-			const author = await article.getUser()
-			// 获取喜欢的个数
-			const count = await article.countUsers()
-			// 数据处理
-			article = handleArticle(article, author, count)
-			res.status(200).json({
-				status: 1,
-				message: '取消喜欢成功',
-				data: article
-			})
-		} catch (e) {
-			next(e)
+		const {slug} = req.params
+		let article = await Article.findByPk(slug, {include: Tag})
+		if (!article) {
+			throw new HttpException(404, '喜欢的文章不存在', 'not found')
 		}
+		// 移除喜欢
+		await article.removeUsers(req.user.email)
+		// 获取文章作者
+		const author = await article.getUser()
+		// 获取喜欢的个数
+		const count = await article.countUsers()
+		// 数据处理
+		article = handleArticle(article, author, count)
+		res.status(200).json({
+			status: 1,
+			message: '取消喜欢成功',
+			data: article
+		})
+	} catch (e) {
+		next(e)
 	}
+}

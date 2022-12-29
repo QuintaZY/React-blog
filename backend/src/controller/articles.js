@@ -20,7 +20,7 @@ function handleArticle(article, author) {
 	return article.dataValues
 }
 
-function handleArticles(article) {
+const handleArticles = async (currentEmail, article) => {
 	const newTags = []
 	for (const t of article.dataValues.tags) {
 		newTags.push(t.name)
@@ -35,6 +35,33 @@ function handleArticles(article) {
 	}
 	delete article.dataValues.user
 	article.dataValues.author = author
+
+	// 喜欢文章
+	// 获取喜欢的个数
+	const favoriteCount = await article.countUsers()
+	if (favoriteCount === 0) {
+		article.dataValues.isFavorite = false
+		article.dataValues.favoriteCount = 0
+		return article.dataValues
+	}
+
+	if (currentEmail) {
+		article.dataValues.isFavorite = false
+		article.dataValues.favoriteCount = favoriteCount
+		return article.dataValues
+	}
+	// 当前登录用户是否已经喜欢
+	// 获取文章被喜欢的人  多个
+	// 获取文章被喜欢的人 emails
+	// 当前登录用户是否在文章被喜欢的人emails里面
+	const allFavoriteUsers = await article.getUsers()
+	let allFavoriteUsersEmails = []
+	allFavoriteUsers.forEach((user) => {
+		allFavoriteUsersEmails.push(user.email)
+	})
+	let isFavorite = allFavoriteUsersEmails.includes(currentEmail)
+	article.dataValues.isFavorite = isFavorite
+	article.dataValues.favoriteCount = favoriteCount
 	return article.dataValues
 }
 
@@ -130,7 +157,8 @@ module.exports.getFollowArticle = async (req, res, next) => {
 			followAuthorEmails.push(e.userEmail)
 		}
 		// 获取作者文章
-		let articleAll = await Article.findAll({
+		let {count, rows} = await Article.findAndCountAll({
+			distinct: true,
 			where: {
 				userEmail: followAuthorEmails
 			},
@@ -138,13 +166,14 @@ module.exports.getFollowArticle = async (req, res, next) => {
 		})
 		// 每个作者的每个文章进行处理，标签和作者信息
 		let articles = []
-		for (let e of articleAll) {
-			articles.push(handleArticles(e))
+		for (let e of rows) {
+			let handleArticle = await handleArticles(fansEmail, e)
+			articles.push(handleArticle)
 		}
 		res.status(200).json({
 			status: 1,
-			message: '获取文章成功'
-
+			message: '获取文章成功',
+			data: {articles, articleCount: count}
 		})
 	} catch (e) {
 		next(e)
@@ -158,12 +187,14 @@ module.exports.getFollowArticle = async (req, res, next) => {
 module.exports.getArticles = async (req, res, next) => {
 	try {
 		// 获取条件参数 query tag author limit offset
-		const {tag, author, limit = 20, offset = 0} = req / query()
+		const {tag, author, limit = 20, offset = 0} = req.query
+		const gemail = req.user ? req.user.email : null
 		// 获取文章数组:
 		//     有标签没有作者
-		let articleAll = []
+		let result;
 		if (tag && !author) {
-			articleAll = await Article.findAll({
+			result = await Article.findAndCountAll({
+				distinct:true,
 				include: [{
 					model: Tag,
 					attributes: ['name'],
@@ -179,7 +210,8 @@ module.exports.getArticles = async (req, res, next) => {
 			})
 		} else if (!tag && author) {
 			//     有作者没有标签
-			articleAll = await Article.findAll({
+			result = await Article.findAndCountAll({
+				distinct:true,
 				include: [{
 					model: Tag,
 					attributes: ['name']
@@ -194,7 +226,8 @@ module.exports.getArticles = async (req, res, next) => {
 		} else if (tag && author) {
 			//     有作者和标签
 			//     有作者没有标签
-			articleAll = await Article.findAll({
+			result = await Article.findAndCountAll({
+				distinct:true,
 				include: [{
 					model: Tag,
 					attributes: ['name'],
@@ -209,7 +242,8 @@ module.exports.getArticles = async (req, res, next) => {
 			})
 		} else {
 			//     没有作者没有标签
-			articleAll = await Article.findAll({
+			result = await Article.findAndCountAll({
+				distinct:true,
 				include: [{
 					model: Tag,
 					attributes: ['name']
@@ -221,16 +255,17 @@ module.exports.getArticles = async (req, res, next) => {
 				offset: parseInt(offset)
 			})
 		}
-
+		const {count, rows} = result
 		// 文章数据梳理
 		let articles = []
-		for (let i of articleAll) {
-			articles.push(handleArticles(a))
+		for (let i of rows) {
+			let handleArticle = handleArticles(gemail, i)
+			articles.push(handleArticle)
 		}
 		res.status(200).json({
-			status:1,
-			message:'获取成功',
-			data: articles
+			status: 1,
+			message: '获取成功',
+			data: {articles, articlesCount: count}
 		})
 	} catch (e) {
 		next(e)
@@ -293,3 +328,4 @@ module.exports.deleteArticles = async (req, res, next) => {
 		next(e)
 	}
 }
+// 获取所有文章

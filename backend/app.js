@@ -13,6 +13,9 @@ const app = express()
 app.use(cors({credential: true, origin: true})) // 跨域
 app.use(express.json()) // 解析json 数据
 app.use(morgan('tiny')) // http 日志
+
+// 静态服务
+app.use('/static',express.static('pubilc'))
 // 路由
 initRoute(app)
 // 404

@@ -6,7 +6,7 @@ const ArticlesController = require('../controller/articles')
 // 文章
 router.post('/', authMiddleware , ArticlesController.createArticle)
 // 条件查看
-router.get('/', authMiddleware , ArticlesController.getArticles)
+router.get('/', ArticlesController.getArticles)
 router.get('/follow', authMiddleware , ArticlesController.getFollowArticle)
 router.get('/:slug', authMiddleware , ArticlesController.getArticle)
 router.put('/:slug', authMiddleware , ArticlesController.updateArticles)
